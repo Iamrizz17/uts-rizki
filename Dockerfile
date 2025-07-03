@@ -15,7 +15,13 @@ ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
 # Update konfigurasi Apache agar menggunakan DocumentRoot yang baru
 RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/000-default.conf
 
-# Copy project Laravel ke folder Apache
+# Tambahkan konfigurasi agar .htaccess dan permission tidak ditolak
+RUN echo '<Directory /var/www/html/public>\n\
+    AllowOverride All\n\
+    Require all granted\n\
+</Directory>' >> /etc/apache2/apache2.conf
+
+# Copy semua file Laravel ke dalam container
 COPY . /var/www/html
 
 # Set working directory
@@ -27,8 +33,8 @@ RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local
 # Install dependency Laravel
 RUN composer install --no-interaction --prefer-dist --optimize-autoloader
 
-# Set permission untuk storage dan cache
-RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
+# Set permission untuk storage, cache, dan public
+RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/public
 
-# Expose port 80
+# Expose port 80 (Apache)
 EXPOSE 80
